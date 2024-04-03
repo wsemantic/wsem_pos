@@ -35,6 +35,6 @@ class ProductProduct(models.Model):
         varcode = str(record.id).zfill(5)
 
         # Formato final del barcode
-        barcode = '{} {}'.format(procode, varcode)
+        barcode = '{}{}'.format(procode, varcode)
 
         return barcode
