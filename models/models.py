@@ -1,27 +1,40 @@
-from odoo import models, fields
+from odoo import api, fields, models, _
+import logging
 
-#     @api.depends('value')
-#     def _value_pc(self):
-#         for record in self:
-#             record.value2 = float(record.value) / 100
-
+_logger = logging.getLogger(__name__)
 
 class ProductProduct(models.Model):
-    _inherit = 'product.product'    
-    
-    def generate_barcode(self):
-        for product in self:
-            if not product.barcode:
-                template_id = product.product_tmpl_id.id
-                product_id = product.id
-                
-                procode = str(template_id).zfill(5)
-                varcode = str(product_id).zfill(5)
-                
-                barcode = f"{procode}#{varcode}"
-                product.barcode = barcode
-            
+    _inherit = 'product.product'
+
+    @api.model
     def create(self, vals):
-        variant = super(ProductProduct, self).create(vals)
-        variant.generate_barcode()
-        return variant
+        # Crear la variante del producto
+        record = super(ProductProduct, self).create(vals)
+        _logger.info(_('WSEM creado record)
+        # Generar y asignar el barcode
+        barcode = self._generate_barcode(record)
+        record.write({'barcode': barcode})
+
+        # Log de información
+        _logger.info(_('WSEM Barcode generado para el producto %s: %s'), record.name, barcode)
+
+        return record
+
+    def _generate_barcode(self, record):
+        """
+        Genera un código de barras en el formato PROCODE VARCODE
+        """
+        # Asegurarse de que el record contiene un 'product_tmpl_id' y un 'id'
+        if not record.product_tmpl_id or not record.id:
+            _logger.error(_('Intento de generar un barcode para un producto sin product_tmpl_id o id.'))
+            return False
+
+        # Generar PROCODE y VARCODE
+         _logger.info(WSEM Generando Barcode")
+        procode = str(record.product_tmpl_id.id).zfill(5)
+        varcode = str(record.id).zfill(5)
+
+        # Formato final del barcode
+        barcode = '{} {}'.format(procode, varcode)
+
+        return barcode
