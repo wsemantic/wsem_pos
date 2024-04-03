@@ -30,7 +30,7 @@ class ProductProduct(models.Model):
             return False
 
         # Generar PROCODE y VARCODE
-         _logger.info("WSEM Generando Barcode")
+        _logger.info("WSEM Generando Barcode")
         procode = str(record.product_tmpl_id.id).zfill(5)
         varcode = str(record.id).zfill(5)
 
