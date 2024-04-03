@@ -10,13 +10,13 @@ class ProductProduct(models.Model):
     def create(self, vals):
         # Crear la variante del producto
         record = super(ProductProduct, self).create(vals)
-        _logger.info(_('WSEM creado record)
+        _logger.info("WSEM creado record")
         # Generar y asignar el barcode
         barcode = self._generate_barcode(record)
         record.write({'barcode': barcode})
 
         # Log de información
-        _logger.info(_('WSEM Barcode generado para el producto %s: %s'), record.name, barcode)
+        _logger.info(f'WSEM Barcode generado para el producto {record.name}, {barcode}')
 
         return record
 
@@ -26,11 +26,11 @@ class ProductProduct(models.Model):
         """
         # Asegurarse de que el record contiene un 'product_tmpl_id' y un 'id'
         if not record.product_tmpl_id or not record.id:
-            _logger.error(_('Intento de generar un barcode para un producto sin product_tmpl_id o id.'))
+            _logger.error('Intento de generar un barcode para un producto sin product_tmpl_id o id.')
             return False
 
         # Generar PROCODE y VARCODE
-         _logger.info(WSEM Generando Barcode")
+         _logger.info("WSEM Generando Barcode")
         procode = str(record.product_tmpl_id.id).zfill(5)
         varcode = str(record.id).zfill(5)
 
