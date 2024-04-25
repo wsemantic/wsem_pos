@@ -31,7 +31,7 @@ class ProductProduct(models.Model):
             return False
 
         # Obtener el default_code del producto template
-        default_code = record.product_tmpl_id.default_code or ''
+        pt_barcode = record.product_tmpl_id.barcode or ''
 
         # Obtener el code del color
         color_code = ''
@@ -47,6 +47,7 @@ class ProductProduct(models.Model):
                 size_name = attr_value.product_attribute_value_id.name or ''
                 break
 
-        # Formato final del barcode
-        barcode = f'{default_code}{color_code}{size_name}'
+        # Formato final del barcode        
+        
+        barcode = f'{pt_barcode}{color_code}{size_name}'
         return barcode        
