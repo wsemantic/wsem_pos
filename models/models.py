@@ -3,6 +3,16 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+class ProductTemplate(models.Model):
+    _inherit = 'product.template'    
+    model_code = fields.Char(string='Model Code', help="Model Codigo", readonly=True, default=lambda self: self._generate_code())
+    
+    @api.model
+    def create(self, vals):
+        if not vals.get('model_code'):
+            vals['model_code'] = self.env['ir.sequence'].next_by_code('product.template.ref')
+        return super(ProductTemplate, self).create(vals)
+        
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
@@ -31,7 +41,7 @@ class ProductProduct(models.Model):
             return False
 
         # Obtener el default_code del producto template
-        pt_barcode = record.product_tmpl_id.barcode or ''
+        model_code = record.product_tmpl_id.model_code or ''
 
         # Obtener el code del color
         color_code = ''
@@ -49,5 +59,5 @@ class ProductProduct(models.Model):
 
         # Formato final del barcode        
         
-        barcode = f'{pt_barcode}{color_code}{size_name}'
+        barcode = f'{model_code}{color_code}{size_name}'
         return barcode        
