@@ -16,25 +16,37 @@ class ProductProduct(models.Model):
         record.write({'barcode': barcode})
 
         # Log de información
-        _logger.info(f'WSEM Barcode generado para el producto {record.name}, {barcode}')
+        _logger.info(f'WSEM Barcode v2 generado para el producto {record.name}, {barcode}')
 
         return record
-
+        
+        
     def _generate_barcode(self, record):
         """
-        Genera un código de barras en el formato PROCODE VARCODE
+        Genera un código de barras en el formato PROCODE-COLORCODE-SIZENAME
         """
-        # Asegurarse de que el record contiene un 'product_tmpl_id' y un 'id'
-        if not record.product_tmpl_id or not record.id:
-            _logger.error('Intento de generar un barcode para un producto sin product_tmpl_id o id.')
+        # Asegurarse de que el record contiene un 'product_tmpl_id'
+        if not record.product_tmpl_id:
+            _logger.error('Intento de generar un barcode para un producto sin product_tmpl_id.')
             return False
 
-        # Generar PROCODE y VARCODE
-        _logger.info("WSEM Generando Barcode")
-        procode = str(record.product_tmpl_id.id).zfill(5)
-        varcode = str(record.id).zfill(5)
+        # Obtener el default_code del producto template
+        default_code = record.product_tmpl_id.default_code or ''
+
+        # Obtener el code del color
+        color_code = ''
+        for attr_value in record.product_template_attribute_value_ids:
+            if attr_value.attribute_id.name.lower() == 'color':
+                color_code = attr_value.product_attribute_value_id.code or ''
+                break
+
+        # Obtener el name de la talla
+        size_name = ''
+        for attr_value in record.product_template_attribute_value_ids:
+            if attr_value.attribute_id.name.lower() == 'talla':
+                size_name = attr_value.product_attribute_value_id.name or ''
+                break
 
         # Formato final del barcode
-        barcode = '{}{}'.format(procode, varcode)
-
-        return barcode
+        barcode = f'{default_code}{color_code}{size_name}'
+        return barcode        
