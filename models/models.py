@@ -5,7 +5,7 @@ _logger = logging.getLogger(__name__)
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'    
-    model_code = fields.Char(string='Model Code', help="Model Codigo", readonly=True, default=lambda self: self._generate_code())
+    model_code = fields.Char(string='Model Code', help="Model Codigo", readonly=True)
     
     @api.model
     def create(self, vals):
