@@ -3,7 +3,7 @@
     <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
         <xpath expr="//t[t-if='isSimple(line)']/WrappedProductNameLines" position="before">			
             <t t-if="'regalo' in line.product_name_wrapped[0].lower() or 'tarjeta' in line.product_name_wrapped[0].lower()">
-				<t t-set="loyalty_card" t-value="line.get_loyalty_card()"/>
+				<t t-set="loyalty_card" t-value="object.get_loyalty_card(line)"/>
 				<t t-if="loyalty_card">
 					<div class="pos-receipt-loyalty-card">
 						<span>Loyalty Card Code:</span>

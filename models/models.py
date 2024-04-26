@@ -69,4 +69,4 @@ class PosOrderLine(models.Model):
         self.ensure_one()
         LoyaltyCard = self.env['loyalty.card']
         loyalty_card = LoyaltyCard.search([('order_id', '=', self.order_id.id)], limit=1)
-        return loyalty_card
+        return 'hola' #loyalty_card
