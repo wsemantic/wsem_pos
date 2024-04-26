@@ -11,11 +11,7 @@
 						<t t-esc="loyalty_card.code"/>
 					</div>
 				</t>
-				 <t t-else="">
-                    <div>
-                        <span>Loyalty Card Not Found</span>
-                    </div>
-                </t>
+
 			</t>
 		</xpath>
      </t>         
