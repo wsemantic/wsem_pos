@@ -2,15 +2,21 @@
 <templates id="template" xml:space="preserve">
     <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
         <xpath expr="//t[t-if='isSimple(line)']/WrappedProductNameLines" position="after">
+			<span>Prueba</span>
             <t t-if="'regalo' in line.product_name_wrapped[0].lower() or 'tarjeta' in line.product_name_wrapped[0].lower()">
-                <t t-set="loyalty_card" t-value="env['loyalty.card'].search([('order_id', '=', line.order_id.id)], limit=1)"/>
-                <t t-if="loyalty_card">
-                    <div class="pos-receipt-loyalty-card">
-                        <span>Loyalty Card Code:</span>
-                        <t t-esc="loyalty_card.code"/>
+				<t t-set="loyalty_card" t-value="line.get_loyalty_card()"/>
+				<t t-if="loyalty_card">
+					<div class="pos-receipt-loyalty-card">
+						<span>Loyalty Card Code:</span>
+						<t t-esc="loyalty_card.code"/>
+					</div>
+				</t>
+				 <t t-else="">
+                    <div>
+                        <span>Loyalty Card Not Found</span>
                     </div>
                 </t>
-            </t>
-        </xpath>
-    </t>
+			</t>
+		</xpath>
+     </t>         
 </templates>

@@ -62,10 +62,11 @@ class ProductProduct(models.Model):
         barcode = f'{model_code}{color_code}{size_name}'
         return barcode        
         
-class PosOrder(models.Model):
-    _inherit = "pos.order"
+class PosOrderLine(models.Model):
+    _inherit = 'pos.order.line'
 
-    def get_loyalty_card_code(self):
-        # Este método asume que hay una relación entre pos.order y loyalty.card a través de source_pos_order_id
-        loyalty_cards = self.env['loyalty.card'].search([('source_pos_order_id', '=', self.id)])
-        return loyalty_cards.mapped('code') if loyalty_cards else ''
+    def get_loyalty_card(self):
+        self.ensure_one()
+        LoyaltyCard = self.env['loyalty.card']
+        loyalty_card = LoyaltyCard.search([('order_id', '=', self.order_id.id)], limit=1)
+        return loyalty_card
