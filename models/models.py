@@ -62,11 +62,11 @@ class ProductProduct(models.Model):
         barcode = f'{model_code}{color_code}{size_name}'
         return barcode        
         
-class PosOrderLine(models.Model):
+'''class PosOrderLine(models.Model):
     _inherit = 'pos.order.line'
 
     def get_loyalty_card(self):
         self.ensure_one()
         LoyaltyCard = self.env['loyalty.card']
         loyalty_card = LoyaltyCard.search([('order_id', '=', self.order_id.id)], limit=1)
-        return loyalty_card
+        return loyalty_card'''
