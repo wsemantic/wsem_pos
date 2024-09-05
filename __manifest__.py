@@ -26,9 +26,13 @@
     'data': [
         # 'security/ir.model.access.csv',
         'views/views.xml',
-        'views/templates.xml',
-        'views/posreceipt.xml'
+        'views/templates.xml'
     ],
+    "assets":{       
+        'web.assets_qweb':[
+            'im_od_pos_giftcard/static/src/xml/OrderReceipt.xml',
+        ], 
+    },    
     # only loaded in demonstration mode
     'demo': [
         'demo/demo.xml',

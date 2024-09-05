@@ -8,7 +8,7 @@
 			
 			<field name="arch" type="xml">
 				<xpath expr="//field[@name='categ_id']" position="after">
-					<field name="model_code"/>
+					<field name="model_code" string="Codigo"/>
 				</xpath>
 			</field>
 		</record>

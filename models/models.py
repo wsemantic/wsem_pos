@@ -5,7 +5,7 @@ _logger = logging.getLogger(__name__)
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'    
-    model_code = fields.Char(string='Model Code', help="Model Codigo", readonly=True)
+    model_code = fields.Char(string='Codigo', help="Model Codigo", readonly=True)
     
     @api.model
     def create(self, vals):
@@ -69,4 +69,4 @@ class PosOrderLine(models.Model):
         self.ensure_one()
         LoyaltyCard = self.env['loyalty.card']
         loyalty_card = LoyaltyCard.search([('order_id', '=', self.order_id.id)], limit=1)
-        return 'hola' #loyalty_card
+        return loyalty_card
