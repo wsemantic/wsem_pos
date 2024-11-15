@@ -24,9 +24,10 @@ class ProductProduct(models.Model):
         # Generar y asignar el barcode
         barcode = self._generate_barcode(record)
         if barcode:
+            _logger.info(f'WSEM Barcode v3 Asignando para el producto {record.name}, {barcode}')
             record.write({'barcode': barcode})
             # Log de información
-            _logger.info(f'WSEM Barcode v3 generado para el producto {record.name}, {barcode}')
+ 
 
         return record
         
