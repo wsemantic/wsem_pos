@@ -27,8 +27,6 @@ class ProductProduct(models.Model):
             record.write({'barcode': barcode})
             # Log de información
             _logger.info(f'WSEM Barcode v3 generado para el producto {record.name}, {barcode}')
-        else:
-            return False
 
         return record
         
