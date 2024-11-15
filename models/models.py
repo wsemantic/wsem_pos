@@ -13,7 +13,7 @@ class ProductTemplate(models.Model):
             # Verificar si 'default_code' está informado y es una cadena de números
             default_code = vals.get('default_code')
             if default_code and default_code.isdigit():
-                 _logger.info(f'WSEM default code como model {default_code}')
+                _logger.info(f'WSEM default code como model {default_code}')
                 vals['model_code'] = default_code
                 
                 # Actualizar la secuencia al máximo entre el siguiente valor y default_code + 1
