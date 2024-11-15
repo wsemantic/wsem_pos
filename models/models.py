@@ -10,7 +10,13 @@ class ProductTemplate(models.Model):
     @api.model
     def create(self, vals):
         if not vals.get('model_code'):
-            vals['model_code'] = self.env['ir.sequence'].next_by_code('product.template.ref')
+            # Verificar si 'default_code' está informado y es una cadena de números
+            default_code = vals.get('default_code')
+            if default_code and default_code.isdigit():
+                vals['model_code'] = default_code
+            else:
+                # Si no, generar el código usando la secuencia
+                vals['model_code'] = self.env['ir.sequence'].next_by_code('product.template.ref')
         return super(ProductTemplate, self).create(vals)
         
 class ProductProduct(models.Model):
