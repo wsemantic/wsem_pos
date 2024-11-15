@@ -42,6 +42,9 @@ class ProductProduct(models.Model):
 
         # Obtener el default_code del producto template
         model_code = record.product_tmpl_id.model_code or ''
+        if not model_code:
+            _logger.warning('El model_code del producto no está relleno.')
+            return False
 
         # Obtener el code del color
         color_code = ''
@@ -49,6 +52,9 @@ class ProductProduct(models.Model):
             if attr_value.attribute_id.name.lower() == 'color':
                 color_code = attr_value.product_attribute_value_id.code or ''
                 break
+        if not color_code:
+            _logger.warning('El color_code del producto no está relleno.')
+            return False                
 
         # Obtener el name de la talla
         size_name = ''
@@ -56,6 +62,9 @@ class ProductProduct(models.Model):
             if attr_value.attribute_id.name.lower() == 'talla':
                 size_name = attr_value.product_attribute_value_id.name or ''
                 break
+        if not size_name:
+            _logger.warning('El size_name del producto no está relleno.')
+            return False                
 
         # Formato final del barcode        
         
