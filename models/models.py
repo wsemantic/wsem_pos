@@ -13,9 +13,18 @@ class ProductTemplate(models.Model):
             # Verificar si 'default_code' está informado y es una cadena de números
             default_code = vals.get('default_code')
             if default_code and default_code.isdigit():
+                 _logger.info(f'WSEM default code como model {default_code}')
                 vals['model_code'] = default_code
+                
+                # Actualizar la secuencia al máximo entre el siguiente valor y default_code + 1
+                sequence = self.env['ir.sequence'].search([('code', '=', 'product.template.ref')], limit=1)
+                if sequence:                    
+                    next_number = max(sequence.number_next_actual, int(default_code) + 1)
+                    _logger.info(f'WSEM encontrada secuencia next {next_number}')
+                    sequence.write({'number_next_actual': next_number})
             else:
                 # Si no, generar el código usando la secuencia
+                _logger.info(f'WSEM generar model code secuencia')
                 vals['model_code'] = self.env['ir.sequence'].next_by_code('product.template.ref')
         return super(ProductTemplate, self).create(vals)
         
