@@ -28,7 +28,7 @@ class ProductProduct(models.Model):
             # Log de información
             _logger.info(f'WSEM Barcode v3 generado para el producto {record.name}, {barcode}')
         else:
-            return false
+            return False
 
         return record
         
