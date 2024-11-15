@@ -26,23 +26,24 @@ class ProductProduct(models.Model):
         record.write({'barcode': barcode})
 
         # Log de información
-        _logger.info(f'WSEM Barcode v2 generado para el producto {record.name}, {barcode}')
+        _logger.info(f'WSEM Barcode v3 generado para el producto {record.name}, {barcode}')
 
         return record
         
         
     def _generate_barcode(self, record):
         """
-        Genera un código de barras en el formato PROCODE-COLORCODE-SIZENAME
+        Genera un código de barras en el formato PROCODE-COLORCODE-SIZENAME.
+        No hace nada si alguna de las cadenas (producto, color, talla) no está rellena o está vacía.
         """
         # Asegurarse de que el record contiene un 'product_tmpl_id'
         if not record.product_tmpl_id:
             _logger.error('Intento de generar un barcode para un producto sin product_tmpl_id.')
             return False
 
-        # Obtener el default_code del producto template
+        # Obtener el model_code del producto template
         model_code = record.product_tmpl_id.model_code or ''
-        if not model_code:
+        if not model_code.strip():
             _logger.warning('El model_code del producto no está relleno.')
             return False
 
@@ -52,9 +53,9 @@ class ProductProduct(models.Model):
             if attr_value.attribute_id.name.lower() == 'color':
                 color_code = attr_value.product_attribute_value_id.code or ''
                 break
-        if not color_code:
+        if not color_code.strip():
             _logger.warning('El color_code del producto no está relleno.')
-            return False                
+            return False
 
         # Obtener el name de la talla
         size_name = ''
@@ -62,14 +63,14 @@ class ProductProduct(models.Model):
             if attr_value.attribute_id.name.lower() == 'talla':
                 size_name = attr_value.product_attribute_value_id.name or ''
                 break
-        if not size_name:
+        if not size_name.strip():
             _logger.warning('El size_name del producto no está relleno.')
-            return False                
+            return False
 
-        # Formato final del barcode        
-        
+        # Generar el código de barras en el formato esperado
         barcode = f'{model_code}{color_code}{size_name}'
-        return barcode        
+        return barcode
+      
         
 '''class PosOrderLine(models.Model):
     _inherit = 'pos.order.line'
