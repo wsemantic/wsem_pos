@@ -62,7 +62,8 @@ class ProductProduct(models.Model):
     def _generate_barcode(self, record):
         """
         Genera un código de barras en el formato PROCODE-COLORCODE-SIZENAME.
-        No hace nada si alguna de las cadenas (producto, color, talla) no está rellena o está vacía.
+        Busca los atributos faltantes en la base de datos o la sesión para asegurar
+        que se generen correctamente durante la importación desde CSV.
         """
         # Asegurarse de que el record contiene un 'product_tmpl_id'
         if not record.product_tmpl_id:
@@ -75,9 +76,16 @@ class ProductProduct(models.Model):
             _logger.warning('WPOS El model_code del producto no está relleno.')
             return False
 
+        # Buscar todos los valores de atributos del producto
+        # incluyendo los que no están presentes en el record actual.
+        all_attributes = self.env['product.template.attribute.value'].search([
+            ('product_tmpl_id', '=', record.product_tmpl_id.id),
+            ('product_id', '=', record.id)
+        ])
+
         # Obtener el code del color
         color_code = ''
-        for attr_value in record.product_template_attribute_value_ids:
+        for attr_value in all_attributes:
             if attr_value.attribute_id.name.lower() == 'color':
                 color_code = attr_value.product_attribute_value_id.code or ''
                 break
@@ -87,7 +95,7 @@ class ProductProduct(models.Model):
 
         # Obtener el name de la talla
         size_name = ''
-        for attr_value in record.product_template_attribute_value_ids:
+        for attr_value in all_attributes:
             if attr_value.attribute_id.name.lower() == 'talla':
                 size_name = attr_value.product_attribute_value_id.name or ''
                 break
@@ -101,7 +109,9 @@ class ProductProduct(models.Model):
         else:
             barcode = f'{model_code}{color_code}{size_name}'
 
+        _logger.info(f'WPOS Barcode generado: {barcode}')
         return barcode
+
       
         
 '''class PosOrderLine(models.Model):
