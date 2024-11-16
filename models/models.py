@@ -76,12 +76,8 @@ class ProductProduct(models.Model):
             _logger.warning('WPOS El model_code del producto no está relleno.')
             return False
 
-        # Buscar todos los valores de atributos del producto
-        # incluyendo los que no están presentes en el record actual.
-        all_attributes = self.env['product.template.attribute.value'].search([
-            ('product_tmpl_id', '=', record.product_tmpl_id.id),
-            ('product_id', '=', record.id)
-        ])
+        # Buscar todos los valores de atributos relacionados con la variante actual
+        all_attributes = record.product_template_attribute_value_ids
 
         # Obtener el code del color
         color_code = ''
@@ -90,7 +86,16 @@ class ProductProduct(models.Model):
                 color_code = attr_value.product_attribute_value_id.code or ''
                 break
         if not color_code.strip():
-            _logger.warning('WPOS El color_code del producto no está relleno.')
+            _logger.warning('WPOS El color_code del producto no está relleno. Intentando buscarlo en la base de datos.')
+            # Si no se encuentra, buscar directamente en la base de datos
+            color_value = self.env['product.template.attribute.value'].search([
+                ('product_tmpl_id', '=', record.product_tmpl_id.id),
+                ('attribute_id.name', '=', 'color')
+            ], limit=1)
+            if color_value:
+                color_code = color_value.product_attribute_value_id.code or ''
+        if not color_code.strip():
+            _logger.warning('WPOS No se pudo encontrar el color_code del producto.')
             return False
 
         # Obtener el name de la talla
@@ -100,7 +105,16 @@ class ProductProduct(models.Model):
                 size_name = attr_value.product_attribute_value_id.name or ''
                 break
         if not size_name.strip():
-            _logger.warning('WPOS El size_name del producto no está relleno.')
+            _logger.warning('WPOS El size_name del producto no está relleno. Intentando buscarlo en la base de datos.')
+            # Si no se encuentra, buscar directamente en la base de datos
+            size_value = self.env['product.template.attribute.value'].search([
+                ('product_tmpl_id', '=', record.product_tmpl_id.id),
+                ('attribute_id.name', '=', 'talla')
+            ], limit=1)
+            if size_value:
+                size_name = size_value.product_attribute_value_id.name or ''
+        if not size_name.strip():
+            _logger.warning('WPOS No se pudo encontrar el size_name del producto.')
             return False
 
         # Generar el código de barras en el formato esperado
@@ -111,6 +125,7 @@ class ProductProduct(models.Model):
 
         _logger.info(f'WPOS Barcode generado: {barcode}')
         return barcode
+
 
       
         
