@@ -52,9 +52,8 @@ class ProductProduct(models.Model):
                 # Escribir el barcode en el product.template relacionado
                 _logger.info('WSEM Escribiendo barcode en product.template')
                 record.product_tmpl_id.write({'barcode': barcode})
-            else:
-                # Escribir el barcode en la variante
-                record.write({'barcode': barcode})
+
+            record.write({'barcode': barcode})
 
         return record
         
