@@ -62,9 +62,7 @@ class ProductProduct(models.Model):
     def _generate_barcode(self, record):
         """
         Genera un código de barras en el formato PROCODE-COLORCODE-SIZENAME.
-        Maneja casos donde los atributos están distribuidos en filas separadas
-        durante la importación de un archivo CSV, buscando en memoria los valores
-        de atributos relacionados.
+        No hace nada si alguna de las cadenas (producto, color, talla) no está rellena o está vacía.
         """
         # Asegurarse de que el record contiene un 'product_tmpl_id'
         if not record.product_tmpl_id:
@@ -77,48 +75,24 @@ class ProductProduct(models.Model):
             _logger.warning('WPOS El model_code del producto no está relleno.')
             return False
 
-        # Buscar todos los valores de atributos relacionados en memoria
-        all_attributes = record.product_template_attribute_value_ids
-
-        # Si faltan atributos, buscar en memoria
-        session_records = self.env['product.product'].search([('product_tmpl_id', '=', record.product_tmpl_id.id)])
-
         # Obtener el code del color
         color_code = ''
-        for attr_value in all_attributes:
+        for attr_value in record.product_template_attribute_value_ids:
             if attr_value.attribute_id.name.lower() == 'color':
                 color_code = attr_value.product_attribute_value_id.code or ''
                 break
         if not color_code.strip():
-            _logger.info('WPOS Buscando color_code en memoria.')
-            for session_record in session_records:
-                for attr_value in session_record.product_template_attribute_value_ids:
-                    if attr_value.attribute_id.name.lower() == 'color':
-                        color_code = attr_value.product_attribute_value_id.code or ''
-                        break
-                if color_code:
-                    break
-        if not color_code.strip():
-            _logger.warning('WPOS No se pudo encontrar el color_code del producto.')
+            _logger.warning('WPOS El color_code del producto no está relleno.')
             return False
 
         # Obtener el name de la talla
         size_name = ''
-        for attr_value in all_attributes:
+        for attr_value in record.product_template_attribute_value_ids:
             if attr_value.attribute_id.name.lower() == 'talla':
                 size_name = attr_value.product_attribute_value_id.name or ''
                 break
         if not size_name.strip():
-            _logger.info('WPOS Buscando size_name en memoria.')
-            for session_record in session_records:
-                for attr_value in session_record.product_template_attribute_value_ids:
-                    if attr_value.attribute_id.name.lower() == 'talla':
-                        size_name = attr_value.product_attribute_value_id.name or ''
-                        break
-                if size_name:
-                    break
-        if not size_name.strip():
-            _logger.warning('WPOS No se pudo encontrar el size_name del producto.')
+            _logger.warning('WPOS El size_name del producto no está relleno.')
             return False
 
         # Generar el código de barras en el formato esperado
@@ -127,11 +101,7 @@ class ProductProduct(models.Model):
         else:
             barcode = f'{model_code}{color_code}{size_name}'
 
-        _logger.info(f'WPOS Barcode generado: {barcode}')
         return barcode
-
-
-
       
         
 '''class PosOrderLine(models.Model):
