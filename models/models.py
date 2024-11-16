@@ -46,9 +46,9 @@ class ProductProduct(models.Model):
             attributes = record.product_template_attribute_value_ids.mapped('attribute_id.name')
             unique_values_per_attribute = all(
                 len(record.product_template_attribute_value_ids.filtered(lambda val: val.attribute_id.name == attr)) == 1
-                for attr in ['color', 'talla']
+                for attr in ['Color', 'Talla']
             )
-            if unique_values_per_attribute and set(attributes) == {'color', 'talla'}:
+            if unique_values_per_attribute and set(attributes) == {'Color', 'Talla'}:
                 # Escribir el barcode en el product.template relacionado
                 _logger.info('WSEM Escribiendo barcode en product.template')
                 record.product_tmpl_id.write({'barcode': barcode})
@@ -66,13 +66,13 @@ class ProductProduct(models.Model):
         """
         # Asegurarse de que el record contiene un 'product_tmpl_id'
         if not record.product_tmpl_id:
-            _logger.error('Intento de generar un barcode para un producto sin product_tmpl_id.')
+            _logger.error('WPOS Intento de generar un barcode para un producto sin product_tmpl_id.')
             return False
 
         # Obtener el model_code del producto template
         model_code = record.product_tmpl_id.model_code or ''
         if not model_code.strip():
-            _logger.warning('El model_code del producto no está relleno.')
+            _logger.warning('WPOS El model_code del producto no está relleno.')
             return False
 
         # Obtener el code del color
@@ -82,7 +82,7 @@ class ProductProduct(models.Model):
                 color_code = attr_value.product_attribute_value_id.code or ''
                 break
         if not color_code.strip():
-            _logger.warning('El color_code del producto no está relleno.')
+            _logger.warning('WPOS El color_code del producto no está relleno.')
             return False
 
         # Obtener el name de la talla
@@ -92,7 +92,7 @@ class ProductProduct(models.Model):
                 size_name = attr_value.product_attribute_value_id.name or ''
                 break
         if not size_name.strip():
-            _logger.warning('El size_name del producto no está relleno.')
+            _logger.warning('WPOS El size_name del producto no está relleno.')
             return False
 
         # Generar el código de barras en el formato esperado
