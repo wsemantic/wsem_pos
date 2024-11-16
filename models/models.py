@@ -36,13 +36,25 @@ class ProductProduct(models.Model):
         # Crear la variante del producto
         record = super(ProductProduct, self).create(vals)
         _logger.info("WSEM creado record")
+        
         # Generar y asignar el barcode
         barcode = self._generate_barcode(record)
         if barcode:
             _logger.info(f'WSEM Barcode v3 Asignando para el producto {record.name}, {barcode}')
-            record.write({'barcode': barcode})
-            # Log de información
- 
+            
+            # Verificar que cada atributo (talla y color) tenga exactamente un solo valor
+            attributes = record.product_template_attribute_value_ids.mapped('attribute_id.name')
+            unique_values_per_attribute = all(
+                len(record.product_template_attribute_value_ids.filtered(lambda val: val.attribute_id.name == attr)) == 1
+                for attr in ['color', 'talla']
+            )
+            if unique_values_per_attribute and set(attributes) == {'color', 'talla'}:
+                # Escribir el barcode en el product.template relacionado
+                _logger.info('WSEM Escribiendo barcode en product.template')
+                record.product_tmpl_id.write({'barcode': barcode})
+            else:
+                # Escribir el barcode en la variante
+                record.write({'barcode': barcode})
 
         return record
         
