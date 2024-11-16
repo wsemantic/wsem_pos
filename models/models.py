@@ -28,32 +28,33 @@ class ProductTemplate(models.Model):
                 vals['model_code'] = self.env['ir.sequence'].next_by_code('product.template.ref')
         return super(ProductTemplate, self).create(vals)
         
+    def _set_barcode(self):
+        variant_count = len(self.product_variant_ids)
+        if variant_count == 1:
+            # Solo asignar el barcode si la variante no tiene uno
+            if not self.product_variant_ids.barcode:
+                self.product_variant_ids.barcode = self.barcode
+        elif variant_count == 0:
+            archived_variants = self.with_context(active_test=False).product_variant_ids
+            if len(archived_variants) == 1:
+                if not archived_variants.barcode:
+                    archived_variants.barcode = self.barcode
+        
 class ProductProduct(models.Model):
     _inherit = 'product.product'
-
+                    
     @api.model
     def create(self, vals):
         # Crear la variante del producto
         record = super(ProductProduct, self).create(vals)
         _logger.info("WSEM creado record")
-        
         # Generar y asignar el barcode
         barcode = self._generate_barcode(record)
         if barcode:
             _logger.info(f'WSEM Barcode v3 Asignando para el producto {record.name}, {barcode}')
-            
-            # Verificar que cada atributo (talla y color) tenga exactamente un solo valor
-            attributes = record.product_template_attribute_value_ids.mapped('attribute_id.name')
-            unique_values_per_attribute = all(
-                len(record.product_template_attribute_value_ids.filtered(lambda val: val.attribute_id.name == attr)) == 1
-                for attr in ['Color', 'Talla']
-            )
-            if unique_values_per_attribute and set(attributes) == {'Color', 'Talla'}:
-                # Escribir el barcode en el product.template relacionado
-                _logger.info('WSEM Escribiendo barcode en product.template')
-                record.product_tmpl_id.write({'barcode': barcode})
-
             record.write({'barcode': barcode})
+            # Log de información
+ 
 
         return record
         
