@@ -7,6 +7,17 @@ class ProductTemplate(models.Model):
     _inherit = 'product.template'    
     model_code = fields.Char(string='Codigo', help="Model Codigo", readonly=True)
     
+    detailed_type = fields.Selection(
+        selection=[
+            ('product', 'Almacenable'),
+            ('consu', 'Consumible'),
+            ('service', 'Servicio'),
+        ],
+        string="Tipo de Producto",
+        default='product',  # Asegúrate de que el predeterminado también esté configurado
+        required=True
+    )
+    
     @api.model
     def create(self, vals):
         if not vals.get('model_code'):
