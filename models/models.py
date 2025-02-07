@@ -6,7 +6,7 @@ _logger = logging.getLogger(__name__)
 class ProductTemplate(models.Model):
     _inherit = 'product.template'    
     model_code = fields.Char(string='Codigo', help="Model Codigo", readonly=True)
-    
+    """
     detailed_type = fields.Selection(
         selection=[
             ('product', 'Almacenable'),
@@ -17,6 +17,7 @@ class ProductTemplate(models.Model):
         default='product',  # Asegúrate de que el predeterminado también esté configurado
         required=True
     )
+    """
     
     @api.model
     def create(self, vals):
@@ -49,6 +50,7 @@ class ProductTemplate(models.Model):
             archived_variants = self.with_context(active_test=False).product_variant_ids
             if len(archived_variants) == 1:
                 if not archived_variants.barcode:
+                    default_code=self.barcode
                     archived_variants.barcode = self.barcode
         
 class ProductProduct(models.Model):
@@ -63,6 +65,7 @@ class ProductProduct(models.Model):
         barcode = self._generate_barcode(record)
         if barcode:
             _logger.info(f'WSEM Barcode v3 Asignando para el producto {record.name}, {barcode}')
+            record.write({'default_code': barcode})
             record.write({'barcode': barcode})
             # Log de información
  

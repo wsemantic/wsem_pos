@@ -3,11 +3,10 @@
     'name': "wsem_pos",
 
     'summary': """
-        Short (1 phrase/line) summary of the module's purpose, used as
-        subtitle on modules listing or apps.openerp.com""",
+        Modelo de producto y codigo de barras automatico""",
 
     'description': """
-        Long description of module's purpose
+        Añade modelo de producto y genera codigo de barras automatico en base variantes
     """,
 
     'author': "Semantic Web Software SL",
@@ -29,13 +28,9 @@
         'views/templates.xml'
     ],
     "assets":{       
-        'web.assets_qweb':[
-            'im_od_pos_giftcard/static/src/xml/OrderReceipt.xml',
-        ], 
     },    
     # only loaded in demonstration mode
     'demo': [
-        'demo/demo.xml',
     ],
     "license": "AGPL-3",
 }
