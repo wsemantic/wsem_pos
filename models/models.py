@@ -111,9 +111,9 @@ class ProductProduct(models.Model):
 
         # Generar el código de barras en el formato esperado
         if len(color_code) >= 3:
-            barcode = f'{model_code}{color_code}.{size_name}'
+            barcode = f'{model_code}{color_code}.{size_name}'.lower()
         else:
-            barcode = f'{model_code}{color_code}{size_name}'
+            barcode = f'{model_code}{color_code}{size_name}'.lower()
 
         return barcode
       
