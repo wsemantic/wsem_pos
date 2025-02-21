@@ -106,8 +106,7 @@ class ProductProduct(models.Model):
                 size_name = attr_value.product_attribute_value_id.name or ''
                 break
         if not size_name.strip():
-            _logger.warning('WPOS El size_name del producto no está relleno.')
-            return False
+            _logger.warning('WPOS El size_name del producto no está relleno. Se genera sin talla')
 
         # Generar el código de barras en el formato esperado
         if len(color_code) >= 3:
