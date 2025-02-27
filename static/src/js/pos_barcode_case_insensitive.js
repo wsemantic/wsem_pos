@@ -1,7 +1,7 @@
 odoo.define('wsem_pos.pos_barcode_case_insensitive', function (require) {
     "use strict";
 
-    const BarcodeReader = require('point_of_sale.barcode_reader');
+    const BarcodeReader = require('point_of_sale.BarcodeReader');
 
     // Guardar la función scan original
     const originalScan = BarcodeReader.prototype.scan;
