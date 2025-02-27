@@ -27,8 +27,11 @@
         'views/views.xml',
         'views/templates.xml'
     ],
-    "assets":{       
-    },    
+    'assets': {
+        'point_of_sale.assets': [
+            'wsem_pos/static/src/js/pos_barcode_case_insensitive.js',
+        ],
+    },   
     # only loaded in demonstration mode
     'demo': [
     ],
