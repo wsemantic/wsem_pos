@@ -13,6 +13,17 @@
 			</field>
 		</record>
 				
+		<record id="product_attribute_view_form_inherit" model="ir.ui.view">
+			<field name="name">product.attribute.form</field>
+			<field name="model">product.attribute</field>
+			<field name="inherit_id" ref="product.product_attribute_view_form"/>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='html_color']" position="after">
+					<field name="code"/>
+				</xpath>
+			</field>
+		</record>
+		
 		<record id="res_config_settings_view_form_inherit_pos_inventory" model="ir.ui.view">
 			<field name="name">res.config.settings.view.form.inherit.pos.inventory</field>
 			<field name="model">res.config.settings</field>
