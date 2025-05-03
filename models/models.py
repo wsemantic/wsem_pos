@@ -72,7 +72,7 @@ class ProductProduct(models.Model):
         _logger.info("WSEM creado record")
         # Generar y asignar el barcode
         pos_barcode_config_value = self.env['ir.config_parameter'].sudo().get_param('wsem_pos.codigo_de_barras_por_atributos')
-        _logger.info(f'WPOS expresion codigo barras por atributos {pos_barcode_config_value}")
+        _logger.info(f'WPOS expresion codigo barras por atributos {pos_barcode_config_value}')
         # Verificar si el valor de la configuración NO es nulo ni cadena vacía
         if pos_barcode_config_value:
             
