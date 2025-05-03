@@ -3,6 +3,15 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+class ResConfigSettings(models.TransientModel):
+    _inherit = 'res.config.settings'
+
+    codigo_de_barras_por_atributos = fields.Char(
+        string="Código de Barras por Atributos",
+        config_parameter='wsem_pos.codigo_de_barras_por_atributos',
+        help="Define la lógica o texto relacionado con la generación de códigos de barras por atributos en el PoS."
+    )
+    
 class ProductTemplate(models.Model):
     _inherit = 'product.template'    
     model_code = fields.Char(string='Codigo', help="Model Codigo", readonly=True)
@@ -62,12 +71,17 @@ class ProductProduct(models.Model):
         record = super(ProductProduct, self).create(vals)
         _logger.info("WSEM creado record")
         # Generar y asignar el barcode
-        barcode = self._generate_barcode(record)
-        if barcode:
-            _logger.info(f'WSEM Barcode v3 Asignando para el producto {record.name}, {barcode}')
-            record.write({'default_code': barcode})
-            record.write({'barcode': barcode})
-            # Log de información
+        pos_barcode_config_value = self.env['ir.config_parameter'].sudo().get_param('wsem_pos.codigo_de_barras_por_atributos')
+        _logger.info(f'WPOS 
+        # Verificar si el valor de la configuración NO es nulo ni cadena vacía
+        if pos_barcode_config_value:
+            
+            barcode = self._generate_barcode(record)
+            if barcode:
+                _logger.info(f'WSEM Barcode v3 Asignando para el producto {record.name}, {barcode}')
+                record.write({'default_code': barcode})
+                record.write({'barcode': barcode})
+                # Log de información
  
 
         return record
@@ -100,19 +114,19 @@ class ProductProduct(models.Model):
             return False
 
         # Obtener el name de la talla
-        size_name = ''
+        size_code = ''
         for attr_value in record.product_template_attribute_value_ids:
             if attr_value.attribute_id.name.lower() == 'talla':
-                size_name = attr_value.product_attribute_value_id.name or ''
+                size_code = attr_value.product_attribute_value_id.code or ''
                 break
-        if not size_name.strip():
-            _logger.warning('WPOS El size_name del producto no está relleno. Se genera sin talla')
+        if not size_code.strip():
+            _logger.warning('WPOS El size_code del producto no está relleno. Se genera sin talla')
 
         # Generar el código de barras en el formato esperado
         if len(color_code) >= 3:
-            barcode = f'{model_code}{color_code}.{size_name}'.lower()
+            barcode = f'{model_code}{color_code}.{size_code}'.lower()
         else:
-            barcode = f'{model_code}{color_code}{size_name}'.lower()
+            barcode = f'{model_code}{color_code}{size_code}'.lower()
 
         return barcode
       
