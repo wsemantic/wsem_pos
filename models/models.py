@@ -92,6 +92,8 @@ class ProductProduct(models.Model):
         Genera un código de barras en el formato PROCODE-COLORCODE-SIZENAME.
         No hace nada si alguna de las cadenas (producto, color, talla) no está rellena o está vacía.
         """
+        pos_barcode_config_value = self.env['ir.config_parameter'].sudo().get_param('wsem_pos.codigo_de_barras_por_atributos')
+        
         # Asegurarse de que el record contiene un 'product_tmpl_id'
         if not record.product_tmpl_id:
             _logger.error('WPOS Intento de generar un barcode para un producto sin product_tmpl_id.')
@@ -117,7 +119,10 @@ class ProductProduct(models.Model):
         size_code = ''
         for attr_value in record.product_template_attribute_value_ids:
             if attr_value.attribute_id.name.lower() == 'talla':
-                size_code = attr_value.product_attribute_value_id.code or ''
+                if 'size_name' in pos_barcode_config_value:
+                    size_code = attr_value.product_attribute_value_id.code or ''
+                else:
+                    size_code = attr_value.product_attribute_value_id.name  or ''
                 break
         if not size_code.strip():
             _logger.warning('WPOS El size_code del producto no está relleno. Se genera sin talla')
