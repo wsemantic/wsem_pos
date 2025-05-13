@@ -120,9 +120,9 @@ class ProductProduct(models.Model):
         for attr_value in record.product_template_attribute_value_ids:
             if attr_value.attribute_id.name.lower() == 'talla':
                 if 'size_name' in pos_barcode_config_value:
-                    size_code = attr_value.product_attribute_value_id.code or ''
+                    size_code = attr_value.product_attribute_value_id.name or ''
                 else:
-                    size_code = attr_value.product_attribute_value_id.name  or ''
+                    size_code = attr_value.product_attribute_value_id.code  or ''
                 break
         if not size_code.strip():
             _logger.warning('WPOS El size_code del producto no está relleno. Se genera sin talla')
