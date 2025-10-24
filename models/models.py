@@ -14,7 +14,7 @@ class ResConfigSettings(models.TransientModel):
     
 class ProductTemplate(models.Model):
     _inherit = 'product.template'    
-    model_code = fields.Char(string='Codigo', help="Model Codigo", readonly=True)
+    model_code = fields.Char(string='Codigo', help="Model Codigo")
     """
     detailed_type = fields.Selection(
         selection=[
