@@ -66,6 +66,15 @@ class ProductTemplate(models.Model):
 class ProductProduct(models.Model):
     _inherit = 'product.product'
                     
+
+    model_code = fields.Char(
+        string="Código",
+        related="product_tmpl_id.model_code",
+        store=True,
+        readonly=True,
+        index=True,  # recomendado si vas a filtrar mucho
+    )
+    
     @api.model
     def create(self, vals):
         # Crear la variante del producto
