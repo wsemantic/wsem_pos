@@ -68,7 +68,7 @@ class ProductProduct(models.Model):
                     
 
     model_code = fields.Char(
-        string="Código",
+        string="Modelo codigo",
         related="product_tmpl_id.model_code",
         store=True,
         readonly=True,
