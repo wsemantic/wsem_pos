@@ -1,50 +1,44 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-	<data>
-		<record id="view_product_template_product_form_wpos_inherit" model="ir.ui.view">
-			<field name="name">product.template.product.wpos.form.inherit</field>
-			<field name="model">product.template</field>
-			<field name="inherit_id" ref="product.product_template_form_view"/>
-			
-			<field name="arch" type="xml">
-				<xpath expr="//field[@name='categ_id']" position="after">
-					<field name="model_code" string="Codigo"/>
-				</xpath>
-			</field>
-		</record>
-				
-		<record id="product_attribute_view_form_inherit" model="ir.ui.view">
-			<field name="name">product.attribute.form</field>
-			<field name="model">product.attribute</field>
-			<field name="inherit_id" ref="product.product_attribute_view_form"/>
-			<field name="arch" type="xml">
-				<xpath expr="//field[@name='html_color']" position="after">
-					<field name="code"/>
-				</xpath>
-			</field>
-		</record>
-		
-		<record id="res_config_settings_view_form_inherit_pos_inventory" model="ir.ui.view">
-			<field name="name">res.config.settings.view.form.inherit.pos.inventory</field>
-			<field name="model">res.config.settings</field>
-			<field name="inherit_id" ref="point_of_sale.res_config_settings_view_form"/>
-			<field name="arch" type="xml">
-				<xpath expr="//div[@data-key='point_of_sale']" position="inside">
-					<div class="o_setting_box">
-						<div class="o_setting_right_pane">
-							<label for="codigo_de_barras_por_atributos"/>
-							<div class="text-muted">
-								Configura la lógica para el código de barras basada en atributos para el PoS.
-							</div>
-							<div class="content-group">
-								<div class="mt16">
-									<field name="codigo_de_barras_por_atributos"/>
-								</div>
-							</div>
-						</div>
-					</div>
-				</xpath>
-			</field>
-		</record>
-	</data>
+    <data>
+        <record id="view_product_template_product_form_wpos_inherit" model="ir.ui.view">
+            <field name="name">product.template.product.wpos.form.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='categ_id']" position="after">
+                    <field name="model_code" string="Codigo" />
+                </xpath>
+            </field>
+        </record>
+
+        <record id="product_attribute_view_form_inherit" model="ir.ui.view">
+            <field name="name">product.attribute.form</field>
+            <field name="model">product.attribute</field>
+            <field name="inherit_id" ref="product.product_attribute_view_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='html_color']" position="after">
+                    <field name="code" />
+                </xpath>
+            </field>
+        </record>
+
+        <record id="res_config_settings_view_form_inherit_pos_inventory" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.inherit.pos.inventory</field>
+            <field name="model">res.config.settings</field>
+            <field name="inherit_id" ref="point_of_sale.res_config_settings_view_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//block[@id='pos_inventory_section']" position="inside">
+                    <setting string="Código de Barras por Atributos"
+                        help="Configura la lógica para el código de barras basada en atributos para el PoS.">
+                        <div class="content-group">
+                            <div class="mt16">
+                                <field name="codigo_de_barras_por_atributos" />
+                            </div>
+                        </div>
+                    </setting>
+                </xpath>
+            </field>
+        </record>
+    </data>
 </odoo>

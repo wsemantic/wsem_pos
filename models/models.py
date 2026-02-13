@@ -14,7 +14,8 @@ class ResConfigSettings(models.TransientModel):
     )
     
 class ProductTemplate(models.Model):
-    _inherit = 'product.template'    
+    _inherit = 'product.template' 
+    
     model_code = fields.Char(string='Codigo', help="Model Codigo")
     """
     detailed_type = fields.Selection(
@@ -29,89 +30,92 @@ class ProductTemplate(models.Model):
     )
     """
     
-    @api.model
-    def create(self, vals):
-        if not vals.get('model_code'):
-            # Verificar si 'default_code' está informado y es una cadena de números
-            default_code = vals.get('default_code')
-            if default_code and default_code.isdigit():
-                _logger.info(f'WSEM default code como model {default_code}')
-                vals['model_code'] = default_code
-                
-                # Actualizar la secuencia al máximo entre el siguiente valor y default_code + 1
-                sequence = self.env['ir.sequence'].search([('code', '=', 'product.template.ref')], limit=1)
-                if sequence:                    
-                    next_number = max(sequence.number_next_actual, int(default_code) + 1)
-                    _logger.info(f'WSEM encontrada secuencia next {next_number}')
-                    sequence.write({'number_next_actual': next_number})
-            else:
-                # Si no, generar el código usando la secuencia
-                _logger.info(f'WSEM generar model code secuencia')
-                vals['model_code'] = self.env['ir.sequence'].next_by_code('product.template.ref')
-        return super(ProductTemplate, self).create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get('model_code'):
+                # Check if ‘default_code’ is provided and is a string of numbers
+                default_code = vals.get('default_code')
+                if default_code and default_code.isdigit():
+                    _logger.info(f'WSEM default code as model {default_code}')
+                    vals['model_code'] = default_code
+
+                    # Update the sequence to the maximum between the next value and default_code + 1
+                    sequence = self.env['ir.sequence'].search([('code', '=', 'product.template.ref')], limit=1)
+                    if sequence:                    
+                        next_number = max(sequence.number_next_actual, int(default_code) + 1)
+                        _logger.info(f'WSEM found sequence next {next_number}')
+                        sequence.write({'number_next_actual': next_number})
+                else:
+                    # Otherwise, generate the code using the sequence
+                    _logger.info(f'WSEM generate model code sequence')
+                    vals['model_code'] = self.env['ir.sequence'].next_by_code('product.template.ref')
+        return super(ProductTemplate, self).create(vals_list)
+
+    def _set_product_variant_field(self, fname):
+        """Override to only set barcode on variant if it doesn't already have one.
         
-    def _set_barcode(self):
-        variant_count = len(self.product_variant_ids)
-        if variant_count == 1:
-            # Solo asignar el barcode si la variante no tiene uno
-            if not self.product_variant_ids.barcode:
-                self.product_variant_ids.barcode = self.barcode
-        elif variant_count == 0:
-            archived_variants = self.with_context(active_test=False).product_variant_ids
-            if len(archived_variants) == 1:
-                if not archived_variants.barcode:
-                    default_code=self.barcode
-                    archived_variants.barcode = self.barcode
+        For barcode field: preserves existing variant barcodes (doesn't overwrite).
+        For other fields: uses default behavior from base class.
+        """
+        if fname != 'barcode':
+            return super()._set_product_variant_field(fname)
+        
+        for template in self:
+            variant_count = len(template.product_variant_ids)
+            if variant_count == 1:
+                if not template.product_variant_ids.barcode:
+                    template.product_variant_ids.barcode = template.barcode
+            elif variant_count == 0:
+                archived_variants = template.with_context(active_test=False).product_variant_ids
+                if len(archived_variants) == 1 and not archived_variants.barcode:
+                    archived_variants.barcode = template.barcode
+
         
 class ProductProduct(models.Model):
     _inherit = 'product.product'
                     
-
     model_code = fields.Char(
         string="Modelo codigo",
         related="product_tmpl_id.model_code",
         store=True,
         readonly=True,
-        index=True,  # recomendado si vas a filtrar mucho
+        index=True,
     )
     
-    @api.model
-    def create(self, vals):
-        # Crear la variante del producto
-        record = super(ProductProduct, self).create(vals)
-        _logger.info("WSEM creado record")
-        # Generar y asignar el barcode
+    @api.model_create_multi
+    def create(self, vals_list):
+        # Create the product variant
+        records = super(ProductProduct, self).create(vals_list)
+        _logger.info("WSEM records created")
+        # Generate and assign the barcode
         pos_barcode_config_value = self.env['ir.config_parameter'].sudo().get_param('wsem_pos.codigo_de_barras_por_atributos')
-        _logger.info(f'WPOS expresion codigo barras por atributos {pos_barcode_config_value}')
-        # Verificar si el valor de la configuración NO es nulo ni cadena vacía
+        _logger.info(f'WPOS barcode expression by attributes {pos_barcode_config_value}')
+        # Check if the configuration value is NOT null or an empty string
         if pos_barcode_config_value:
-            
-            barcode = self._generate_barcode(record)
-            if barcode:
-                _logger.info(f'WSEM Barcode v3 Asignando para el producto {record.name}, {barcode}')
-                record.write({'default_code': barcode})
-                record.write({'barcode': barcode})
-                # Log de información
- 
-
-        return record
-        
+            for record in records:
+                barcode = self._generate_barcode(record)
+                if barcode:
+                    _logger.info(f'WSEM Barcode v3 Assigning for the product {record.name}, {barcode}')
+                    record.write({'default_code': barcode, 'barcode': barcode})
+                    # Information log
+        return records
         
     def _generate_barcode(self, record):
-        """Genera un código de barras dinámico en base a la expresión configurada."""
+        """Generates a dynamic barcode based on the configured expression."""
         pos_barcode_config_value = self.env['ir.config_parameter'].sudo().get_param('wsem_pos.codigo_de_barras_por_atributos')
-
+        
         if not pos_barcode_config_value:
-            _logger.warning('WPOS No se encontró expresión para generar el código de barras.')
+            _logger.warning('WPOS No expression found to generate the barcode.')
             return False
-
+        
         if not record.product_tmpl_id:
-            _logger.error('WPOS Intento de generar un barcode para un producto sin product_tmpl_id.')
+            _logger.error('WPOS Attempt to generate a barcode for a product without product_tmpl_id.')
             return False
 
         segment_strings = re.findall(r'\(([^)]+)\)', pos_barcode_config_value)
         if not segment_strings:
-            _logger.warning('WPOS La expresión de código de barras no contiene segmentos válidos.')
+            _logger.warning('WPOS The barcode expression does not contain valid segments.')
             return False
 
         segments = []
@@ -121,7 +125,7 @@ class ProductProduct(models.Model):
             cleaned_segment = raw_segment.strip()
             match = segment_pattern.match(cleaned_segment)
             if not match:
-                _logger.warning('WPOS Segmento de código de barras inválido: %s', cleaned_segment)
+                _logger.warning('WPOS Invalid barcode segment: %s', cleaned_segment)
                 continue
 
             attr = match.group('attr').lower()
@@ -134,14 +138,14 @@ class ProductProduct(models.Model):
                     try:
                         min_length, max_length = [int(value.strip()) for value in length_content.split(',', 1)]
                     except ValueError:
-                        _logger.warning('WPOS Longitud inválida en segmento: %s', cleaned_segment)
+                        _logger.warning('WPOS Invalid length in segment: %s', cleaned_segment)
                         min_length = max_length = None
                 else:
                     try:
                         fixed = int(length_content.strip())
                         min_length = max_length = fixed
                     except ValueError:
-                        _logger.warning('WPOS Longitud fija inválida en segmento: %s', cleaned_segment)
+                        _logger.warning('WPOS Invalid fixed length in segment: %s', cleaned_segment)
 
             segments.append({
                 'attr': attr,
@@ -152,7 +156,7 @@ class ProductProduct(models.Model):
             })
 
         if not segments:
-            _logger.warning('WPOS No se pudieron procesar segmentos válidos para la expresión del código de barras.')
+            _logger.warning('WPOS Valid segments for the barcode expression could not be processed.')
             return False
 
         barcode = ''
@@ -183,20 +187,20 @@ class ProductProduct(models.Model):
                 else:
                     value = record.product_tmpl_id.model_code or ''
                 if not value.strip():
-                    _logger.warning('WPOS El model_code del producto no está relleno.')
-                    return False
+                    _logger.warning('WPOS The product model_code is not filled in.')
+                    return False            
             else:
                 value = _get_attribute_value(attr, field)
                 if attr == 'color' and not value.strip():
-                    _logger.warning('WPOS El color_code del producto no está relleno.')
+                    _logger.warning('WPOS The product color_code is not filled in.')
                     return False
                 if attr == 'talla' and not value.strip():
-                    _logger.warning('WPOS El size_code del producto no está relleno. Se genera sin talla')
+                    _logger.warning('WPOS The product size_code is not filled in. It is generated without size')
 
             value = _truncate_value(value, max_length)
 
             if min_length and len(value) < min_length:
-                _logger.warning('WPOS El valor para %s no cumple la longitud mínima.', segment['raw'])
+                _logger.warning('WPOS The value for %s does not meet the minimum length.', segment['raw'])
 
             barcode += (value or '').lower()
 
@@ -219,8 +223,8 @@ class ProductAttributeValue(models.Model):
     
     @api.model
     def _generate_code(self):
-        return self.env['ir.sequence'].next_by_code('product.attribute.value.code')      
-        
+        return self.env['ir.sequence'].next_by_code('product.attribute.value.code')
+
 '''class PosOrderLine(models.Model):
     _inherit = 'pos.order.line'
 

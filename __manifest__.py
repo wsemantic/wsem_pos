@@ -12,28 +12,18 @@
     'author': "Semantic Web Software SL",
     'website': "https://wsemantic.com",
 
-    # Categories can be used to filter modules in modules listing
-    # Check https://github.com/odoo/odoo/blob/16.0/odoo/addons/base/data/ir_module_category_data.xml
-    # for the full list
     'category': 'Uncategorized',
-    'version': '16.0.0.2',
+    'version': '18.0.0.1',
 
-    # any module necessary for this one to work correctly
-    'depends': ['sale','point_of_sale'], 
+    'depends': ['sale', 'point_of_sale'],
 
-    # always loaded
     'data': [
-        # 'security/ir.model.access.csv',
         'views/views.xml',
-        'views/templates.xml'
     ],
     'assets': {
         'point_of_sale.assets': [
-            'wsem_pos/static/src/js/pos_barcode_case_insensitive.js',
+            'wsem_pos/static/src/app/barcode/barcode_reader_patch.js',
         ],
-    },   
-    # only loaded in demonstration mode
-    'demo': [
-    ],
+    },
     "license": "AGPL-3",
 }
