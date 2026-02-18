@@ -27,7 +27,7 @@ Variables opcionales:
 - `WSEM_COMPANY_ID=<id>`: limita la ejecución a una compañía.
 - `WSEM_PRODUCT_ID=<id>`: procesa solo un `product.product`.
 - `WSEM_TEMPLATE_ID=<id>`: procesa solo variantes de un `product.template`.
-- `WSEM_DEBUG=1`: imprime datos de depuración por producto.
+- `WSEM_DEBUG=1`: imprime datos de depuración por producto (activado por defecto; use `WSEM_DEBUG=0` para desactivar).
 
 Ejemplo:
 

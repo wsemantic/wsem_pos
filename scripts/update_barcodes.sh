@@ -11,7 +11,7 @@ if [[ $# -lt 1 ]]; then
   echo "  WSEM_COMPANY_ID=<id>           Filtra por compañía del producto"
   echo "  WSEM_PRODUCT_ID=<id>           Procesa solo un product.product"
   echo "  WSEM_TEMPLATE_ID=<id>          Procesa solo variantes de un product.template"
-  echo "  WSEM_DEBUG=1                   Imprime depuración detallada"
+  echo "  WSEM_DEBUG=1                   Imprime depuración detallada (por defecto: activado, use 0 para desactivar)"
   exit 1
 fi
 
@@ -50,7 +50,7 @@ should_commit = _as_bool(os.getenv("WSEM_COMMIT"), default=True)
 company_id = _as_int(os.getenv("WSEM_COMPANY_ID"))
 product_id = _as_int(os.getenv("WSEM_PRODUCT_ID"))
 template_id = _as_int(os.getenv("WSEM_TEMPLATE_ID"))
-debug = _as_bool(os.getenv("WSEM_DEBUG"), default=False)
+debug = _as_bool(os.getenv("WSEM_DEBUG"), default=True)
 
 product_model = env["product.product"]
 company_model = env["res.company"]
