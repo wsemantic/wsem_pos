@@ -22,10 +22,11 @@ Variables opcionales:
 
 - `WSEM_DRY_RUN=1`: simula sin escribir.
 - `WSEM_WRITE_DEFAULT_CODE=0`: actualiza solo `barcode` y no `default_code`.
+- `WSEM_COMMIT=1`: fuerza `commit` al final (activado por defecto, ignorado en dry run).
 - `WSEM_COMPANY_ID=<id>`: limita la ejecución a una compañía.
 - `WSEM_PRODUCT_ID=<id>`: procesa solo un `product.product`.
 - `WSEM_TEMPLATE_ID=<id>`: procesa solo variantes de un `product.template`.
-- `WSEM_DEBUG=1`: imprime datos de depuración por producto.
+- `WSEM_DEBUG=1`: imprime datos de depuración por producto (activado por defecto; use `WSEM_DEBUG=0` para desactivar).
 
 Ejemplo:
 
