@@ -17,7 +17,7 @@ ODOO_CMD=(odoo shell -d "$DB_NAME")
 if [[ -n "$ODOO_CONF" ]]; then
   ODOO_CMD+=( -c "$ODOO_CONF" )
 fi
-
+ODOO_CMD+=( --no-http)
 "${ODOO_CMD[@]}" <<'PY'
 import os
 
