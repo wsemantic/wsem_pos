@@ -17,6 +17,7 @@ ODOO_CMD=(odoo shell -d "$DB_NAME")
 if [[ -n "$ODOO_CONF" ]]; then
   ODOO_CMD+=( -c "$ODOO_CONF" )
 fi
+ODOO_CMD+=( --no-http )
 
 "${ODOO_CMD[@]}" <<'PY'
 import os
@@ -42,47 +43,58 @@ write_default_code = _as_bool(os.getenv("WSEM_WRITE_DEFAULT_CODE"), default=True
 company_id = _as_int(os.getenv("WSEM_COMPANY_ID"))
 
 product_model = env["product.product"]
-expression = env["ir.config_parameter"].sudo().get_param("wsem_pos.codigo_de_barras_por_atributos")
+company_model = env["res.company"]
 
 updated = 0
 skipped = 0
 errors = 0
+missing_expression = 0
 
 domain = []
+selected_company = None
 if company_id is not None:
+    selected_company = company_model.browse(company_id).exists()
+    if not selected_company:
+        raise ValueError(f"WSEM_COMPANY_ID={company_id} does not exist")
     domain.append(("company_id", "=", company_id))
 
-if not expression:
-    print("Barcode regeneration summary:")
-    print("- updated: 0")
-    print("- skipped: 0")
-    print("- errors : 0")
-    print("- warning: missing barcode expression in parameter wsem_pos.codigo_de_barras_por_atributos")
-else:
-    products = product_model.search(domain)
-    for product in products:
-        barcode = product_model._generate_barcode(product)
-        if not barcode:
-            errors += 1
-            print(f"[ERROR] {product.id}: {product.display_name}")
-            continue
+processing_model = product_model
+if selected_company:
+    processing_model = product_model.with_company(selected_company).with_context(allowed_company_ids=[selected_company.id])
 
-        vals = {"barcode": barcode}
-        if write_default_code:
-            vals["default_code"] = barcode
+products = processing_model.search(domain)
+for product in products:
+    expression = processing_model._get_barcode_expression_for_record(product)
+    if not expression:
+        missing_expression += 1
+        continue
 
-        if all(product[field] == value for field, value in vals.items()):
-            skipped += 1
-            continue
+    barcode = processing_model._generate_barcode(product, expression=expression)
+    if not barcode:
+        errors += 1
+        print(f"[ERROR] {product.id}: {product.display_name}")
+        continue
 
-        if not dry_run:
-            product.write(vals)
-        updated += 1
+    vals = {"barcode": barcode}
+    if write_default_code:
+        vals["default_code"] = barcode
 
-    print("Barcode regeneration summary:")
-    print(f"- company filter: {company_id if company_id is not None else 'none'}")
-    print(f"- products: {len(products)}")
-    print(f"- updated: {updated}")
-    print(f"- skipped: {skipped}")
-    print(f"- errors : {errors}")
+    if all(product[field] == value for field, value in vals.items()):
+        skipped += 1
+        continue
+
+    if not dry_run:
+        product.write(vals)
+    updated += 1
+
+print("Barcode regeneration summary:")
+print(f"- company filter: {company_id if company_id is not None else 'none'}")
+print(f"- products: {len(products)}")
+print(f"- updated: {updated}")
+print(f"- skipped: {skipped}")
+print(f"- errors : {errors}")
+if company_id is not None and not selected_company.codigo_de_barras_por_atributos:
+    print(f"- warning: missing barcode expression in company {selected_company.display_name} ({selected_company.id})")
+elif missing_expression:
+    print(f"- warning: skipped {missing_expression} products without barcode expression configured in their company")
 PY
