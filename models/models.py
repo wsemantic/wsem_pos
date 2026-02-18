@@ -4,21 +4,32 @@ import re
 
 _logger = logging.getLogger(__name__)
 
+
+class ResCompany(models.Model):
+    _inherit = 'res.company'
+
+    codigo_de_barras_por_atributos = fields.Char(
+        string="Código de Barras por Atributos",
+        help="Expresión para la generación de códigos de barras por atributos en PoS para esta compañía.",
+    )
+
+
 class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
     codigo_de_barras_por_atributos = fields.Char(
         string="Código de Barras por Atributos",
-        config_parameter='wsem_pos.codigo_de_barras_por_atributos',
-        help="Define la lógica o texto relacionado con la generación de códigos de barras por atributos en el PoS."
+        related='company_id.codigo_de_barras_por_atributos',
+        readonly=False,
+        help="Define la lógica o texto relacionado con la generación de códigos de barras por atributos en el PoS para la compañía activa.",
     )
-    
+
+
 class ProductTemplate(models.Model):
-    _inherit = 'product.template' 
-    
+    _inherit = 'product.template'
+
     model_code = fields.Char(string='Codigo', help="Model Codigo")
 
-    
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -31,25 +42,25 @@ class ProductTemplate(models.Model):
 
                     # Update the sequence to the maximum between the next value and default_code + 1
                     sequence = self.env['ir.sequence'].search([('code', '=', 'product.template.ref')], limit=1)
-                    if sequence:                    
+                    if sequence:
                         next_number = max(sequence.number_next_actual, int(default_code) + 1)
                         _logger.info(f'WSEM found sequence next {next_number}')
                         sequence.write({'number_next_actual': next_number})
                 else:
                     # Otherwise, generate the code using the sequence
-                    _logger.info(f'WSEM generate model code sequence')
+                    _logger.info('WSEM generate model code sequence')
                     vals['model_code'] = self.env['ir.sequence'].next_by_code('product.template.ref')
         return super(ProductTemplate, self).create(vals_list)
 
     def _set_product_variant_field(self, fname):
         """Override to only set barcode on variant if it doesn't already have one.
-        
+
         For barcode field: preserves existing variant barcodes (doesn't overwrite).
         For other fields: uses default behavior from base class.
         """
         if fname != 'barcode':
             return super()._set_product_variant_field(fname)
-        
+
         for template in self:
             variant_count = len(template.product_variant_ids)
             if variant_count == 1:
@@ -60,10 +71,10 @@ class ProductTemplate(models.Model):
                 if len(archived_variants) == 1 and not archived_variants.barcode:
                     archived_variants.barcode = template.barcode
 
-        
+
 class ProductProduct(models.Model):
     _inherit = 'product.product'
-                    
+
     model_code = fields.Char(
         string="Modelo codigo",
         related="product_tmpl_id.model_code",
@@ -71,33 +82,37 @@ class ProductProduct(models.Model):
         readonly=True,
         index=True,
     )
-    
+
+    def _get_barcode_expression_for_record(self, record):
+        company = record.company_id or self.env.company
+        expression = company.codigo_de_barras_por_atributos
+        if not expression:
+            _logger.warning('WPOS No barcode expression for company %s (%s).', company.display_name, company.id)
+        return expression
+
     @api.model_create_multi
     def create(self, vals_list):
         # Create the product variant
         records = super(ProductProduct, self).create(vals_list)
         _logger.info("WSEM records created")
-        # Generate and assign the barcode
-        pos_barcode_config_value = self.env['ir.config_parameter'].sudo().get_param('wsem_pos.codigo_de_barras_por_atributos')
-        _logger.info(f'WPOS barcode expression by attributes {pos_barcode_config_value}')
-        # Check if the configuration value is NOT null or an empty string
-        if pos_barcode_config_value:
-            for record in records:
-                barcode = self._generate_barcode(record)
-                if barcode:
-                    _logger.info(f'WSEM Barcode v3 Assigning for the product {record.name}, {barcode}')
-                    record.write({'default_code': barcode, 'barcode': barcode})
-                    # Information log
+        for record in records:
+            expression = self._get_barcode_expression_for_record(record)
+            if not expression:
+                continue
+            barcode = self._generate_barcode(record, expression=expression)
+            if barcode:
+                _logger.info(f'WSEM Barcode v3 Assigning for the product {record.name}, {barcode}')
+                record.write({'default_code': barcode, 'barcode': barcode})
         return records
-        
-    def _generate_barcode(self, record):
+
+    def _generate_barcode(self, record, expression=None):
         """Generates a dynamic barcode based on the configured expression."""
-        pos_barcode_config_value = self.env['ir.config_parameter'].sudo().get_param('wsem_pos.codigo_de_barras_por_atributos')
-        
+        pos_barcode_config_value = expression or self._get_barcode_expression_for_record(record)
+
         if not pos_barcode_config_value:
             _logger.warning('WPOS No expression found to generate the barcode.')
             return False
-        
+
         if not record.product_tmpl_id:
             _logger.error('WPOS Attempt to generate a barcode for a product without product_tmpl_id.')
             return False
@@ -213,12 +228,3 @@ class ProductAttributeValue(models.Model):
     @api.model
     def _generate_code(self):
         return self.env['ir.sequence'].next_by_code('product.attribute.value.code')
-
-'''class PosOrderLine(models.Model):
-    _inherit = 'pos.order.line'
-
-    def get_loyalty_card(self):
-        self.ensure_one()
-        LoyaltyCard = self.env['loyalty.card']
-        loyalty_card = LoyaltyCard.search([('order_id', '=', self.order_id.id)], limit=1)
-        return loyalty_card'''
