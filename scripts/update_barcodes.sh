@@ -17,7 +17,8 @@ ODOO_CMD=(odoo shell -d "$DB_NAME")
 if [[ -n "$ODOO_CONF" ]]; then
   ODOO_CMD+=( -c "$ODOO_CONF" )
 fi
-ODOO_CMD+=( --no-http)
+ODOO_CMD+=( --no-http )
+
 "${ODOO_CMD[@]}" <<'PY'
 import os
 
@@ -57,14 +58,18 @@ if company_id is not None:
         raise ValueError(f"WSEM_COMPANY_ID={company_id} does not exist")
     domain.append(("company_id", "=", company_id))
 
-products = product_model.search(domain)
+processing_model = product_model
+if selected_company:
+    processing_model = product_model.with_company(selected_company).with_context(allowed_company_ids=[selected_company.id])
+
+products = processing_model.search(domain)
 for product in products:
-    expression = product_model._get_barcode_expression_for_record(product)
+    expression = processing_model._get_barcode_expression_for_record(product)
     if not expression:
         missing_expression += 1
         continue
 
-    barcode = product_model._generate_barcode(product, expression=expression)
+    barcode = processing_model._generate_barcode(product, expression=expression)
     if not barcode:
         errors += 1
         print(f"[ERROR] {product.id}: {product.display_name}")
