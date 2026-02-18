@@ -22,11 +22,15 @@ Variables opcionales:
 
 - `WSEM_DRY_RUN=1`: simula sin escribir.
 - `WSEM_WRITE_DEFAULT_CODE=0`: actualiza solo `barcode` y no `default_code`.
+- `WSEM_COMPANY_ID=<id>`: limita la ejecución a una compañía.
+- `WSEM_PRODUCT_ID=<id>`: procesa solo un `product.product`.
+- `WSEM_TEMPLATE_ID=<id>`: procesa solo variantes de un `product.template`.
+- `WSEM_DEBUG=1`: imprime datos de depuración por producto.
 
 Ejemplo:
 
 ```bash
-WSEM_DRY_RUN=1 scripts/update_barcodes.sh mi_bd /etc/odoo.conf
+WSEM_DRY_RUN=1 WSEM_DEBUG=1 WSEM_PRODUCT_ID=933 WSEM_TEMPLATE_ID=176 scripts/update_barcodes.sh mi_bd /etc/odoo.conf
 ```
 
 ### Opción 2: durante una instalación/upgrade
