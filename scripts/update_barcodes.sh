@@ -6,6 +6,8 @@ if [[ $# -lt 1 ]]; then
   echo "Variables opcionales:"
   echo "  WSEM_DRY_RUN=1                 Solo simula cambios"
   echo "  WSEM_WRITE_DEFAULT_CODE=0      No copia el código de barras a default_code"
+  echo "  WSEM_KEEP_DEFAULT_CODE=1       No sobrescribe default_code si ya tiene valor"
+  echo "  WSEM_COMMIT=1                  Fuerza commit al final (por defecto: activado)"
   echo "  WSEM_COMPANY_ID=<id>           Filtra por compañía del producto"
   echo "  WSEM_PRODUCT_ID=<id>           Procesa solo un product.product"
   echo "  WSEM_TEMPLATE_ID=<id>          Procesa solo variantes de un product.template"
@@ -43,6 +45,8 @@ def _as_int(value):
 
 dry_run = _as_bool(os.getenv("WSEM_DRY_RUN"), default=False)
 write_default_code = _as_bool(os.getenv("WSEM_WRITE_DEFAULT_CODE"), default=True)
+keep_default_code = _as_bool(os.getenv("WSEM_KEEP_DEFAULT_CODE"), default=False)
+should_commit = _as_bool(os.getenv("WSEM_COMMIT"), default=True)
 company_id = _as_int(os.getenv("WSEM_COMPANY_ID"))
 product_id = _as_int(os.getenv("WSEM_PRODUCT_ID"))
 template_id = _as_int(os.getenv("WSEM_TEMPLATE_ID"))
@@ -104,7 +108,7 @@ for product in products:
         print(f"[DEBUG] generated barcode={barcode!r}")
 
     vals = {"barcode": barcode}
-    if write_default_code:
+    if write_default_code and not (keep_default_code and product.default_code):
         vals["default_code"] = barcode
 
     if all(product[field] == value for field, value in vals.items()):
@@ -115,13 +119,17 @@ for product in products:
 
     if not dry_run:
         product.write(vals)
+        updated += 1
         if debug:
             product.flush_recordset(["barcode", "default_code"])
             print(f"[DEBUG] write applied -> barcode={product.barcode!r} default_code={product.default_code!r}")
     elif debug:
         print("[DEBUG] dry-run active: write skipped")
 
-    updated += 1
+if not dry_run and should_commit:
+    env.cr.commit()
+    if debug:
+        print("[DEBUG] transaction committed")
 
 print("Barcode regeneration summary:")
 print(f"- company filter: {company_id if company_id is not None else 'none'}")
