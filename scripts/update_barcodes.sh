@@ -13,7 +13,7 @@ fi
 DB_NAME="$1"
 ODOO_CONF="${2:-}"
 
-ODOO_CMD=(odoo shell -d "$DB_NAME")
+ODOO_CMD=(/opt/odoo18/odoo/odoo-bin shell -d "$DB_NAME")
 if [[ -n "$ODOO_CONF" ]]; then
   ODOO_CMD+=( -c "$ODOO_CONF" )
 fi
