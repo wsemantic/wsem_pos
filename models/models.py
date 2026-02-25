@@ -1,4 +1,5 @@
 from odoo import api, fields, models, _
+from odoo.tools import str2bool
 import logging
 import re
 
@@ -11,6 +12,13 @@ class ResConfigSettings(models.TransientModel):
         string="Código de Barras por Atributos",
         config_parameter='wsem_pos.codigo_de_barras_por_atributos',
         help="Define la lógica o texto relacionado con la generación de códigos de barras por atributos en el PoS."
+    )
+
+    disponible_tpv_por_defecto = fields.Boolean(
+        string="Disponible TPV por defecto",
+        config_parameter='wsem_pos.disponible_tpv_por_defecto',
+        default=True,
+        help="Si está activo, los productos almacenables nuevos quedarán marcados como disponibles en TPV."
     )
     
 class ProductTemplate(models.Model):
@@ -31,6 +39,18 @@ class ProductTemplate(models.Model):
     
     @api.model
     def create(self, vals):
+        param_value = self.env['ir.config_parameter'].sudo().get_param(
+            'wsem_pos.disponible_tpv_por_defecto',
+            default=True,
+        )
+        product_type = vals.get('detailed_type') or vals.get('type')
+        if (
+            str2bool(param_value)
+            and product_type == 'product'
+            and 'available_in_pos' not in vals
+        ):
+            vals['available_in_pos'] = True
+
         if not vals.get('model_code'):
             # Verificar si 'default_code' está informado y es una cadena de números
             default_code = vals.get('default_code')
