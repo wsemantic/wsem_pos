@@ -37,6 +37,14 @@
                             </div>
                         </div>
                     </setting>
+                    <setting string="Disponible TPV por defecto"
+                        help="Si está activo, los productos almacenables nuevos quedarán disponibles en TPV automáticamente.">
+                        <div class="content-group">
+                            <div class="mt16">
+                                <field name="disponible_tpv_por_defecto" />
+                            </div>
+                        </div>
+                    </setting>
                 </xpath>
             </field>
         </record>
