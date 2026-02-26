@@ -12,6 +12,11 @@ class ResCompany(models.Model):
         string="Código de Barras por Atributos",
         help="Expresión para la generación de códigos de barras por atributos en PoS para esta compañía.",
     )
+    disponible_tpv_por_defecto = fields.Boolean(
+        string="Disponible TPV por defecto",
+        default=True,
+        help="Si está activo, los productos almacenables nuevos se marcarán como disponibles en TPV automáticamente.",
+    )
 
 
 class ResConfigSettings(models.TransientModel):
@@ -23,6 +28,12 @@ class ResConfigSettings(models.TransientModel):
         readonly=False,
         help="Define la lógica o texto relacionado con la generación de códigos de barras por atributos en el PoS para la compañía activa.",
     )
+    disponible_tpv_por_defecto = fields.Boolean(
+        string="Disponible TPV por defecto",
+        related='company_id.disponible_tpv_por_defecto',
+        readonly=False,
+        help="Marca automáticamente como disponible en TPV los productos almacenables creados cuando está activo.",
+    )
 
 
 class ProductTemplate(models.Model):
@@ -32,7 +43,13 @@ class ProductTemplate(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        product_defaults = self.default_get(['is_storable'])
         for vals in vals_list:
+            company = self.env['res.company'].browse(vals.get('company_id')) if vals.get('company_id') else self.env.company
+            is_storable = vals.get('is_storable', product_defaults.get('is_storable'))
+            if is_storable and company.disponible_tpv_por_defecto:
+                vals['available_in_pos'] = True
+
             if not vals.get('model_code'):
                 # Check if ‘default_code’ is provided and is a string of numbers
                 default_code = vals.get('default_code')
@@ -51,6 +68,17 @@ class ProductTemplate(models.Model):
                     _logger.info('WSEM generate model code sequence')
                     vals['model_code'] = self.env['ir.sequence'].next_by_code('product.template.ref')
         return super(ProductTemplate, self).create(vals_list)
+
+    def write(self, vals):
+        should_force_pos = any(field in vals for field in ('is_storable', 'company_id')) and 'available_in_pos' not in vals
+        result = super(ProductTemplate, self).write(vals)
+        if should_force_pos:
+            templates_to_enable = self.filtered(
+                lambda template: template.is_storable and (template.company_id or self.env.company).disponible_tpv_por_defecto and not template.available_in_pos
+            )
+            if templates_to_enable:
+                super(ProductTemplate, templates_to_enable).write({'available_in_pos': True})
+        return result
 
     def _set_product_variant_field(self, fname):
         """Override to only set barcode on variant if it doesn't already have one.
