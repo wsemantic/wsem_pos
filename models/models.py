@@ -1,5 +1,4 @@
-from odoo import api, fields, models, _
-from odoo.tools import str2bool
+from odoo import api, fields, models
 import logging
 import re
 
@@ -16,11 +15,32 @@ class ResConfigSettings(models.TransientModel):
 
     disponible_tpv_por_defecto = fields.Boolean(
         string="Disponible TPV por defecto",
-        config_parameter='wsem_pos.disponible_tpv_por_defecto',
-        default=True,
         help="Si está activo, los productos almacenables nuevos quedarán marcados como disponibles en TPV."
     )
-    
+
+    @api.model
+    def get_values(self):
+        res = super().get_values()
+        enabled = self._is_config_enabled(
+            self.env['ir.config_parameter'].sudo().get_param(
+                'wsem_pos.disponible_tpv_por_defecto',
+            )
+        )
+        res.update(disponible_tpv_por_defecto=enabled)
+        return res
+
+    def set_values(self):
+        super().set_values()
+        self.env['ir.config_parameter'].sudo().set_param(
+            'wsem_pos.disponible_tpv_por_defecto',
+            'True' if self.disponible_tpv_por_defecto else '',
+        )
+
+    @api.model
+    def _is_config_enabled(self, value):
+        normalized = str(value).strip().lower()
+        return normalized not in ('', '0', 'false', 'off', 'no', 'none')
+
 class ProductTemplate(models.Model):
     _inherit = 'product.template'    
     model_code = fields.Char(string='Codigo', help="Model Codigo")
@@ -38,14 +58,30 @@ class ProductTemplate(models.Model):
     """
     
     @api.model
+    def default_get(self, fields_list):
+        vals = super().default_get(fields_list)
+        if (
+            'detailed_type' in fields_list
+            and not vals.get('detailed_type')
+            and not self.env.context.get('default_detailed_type')
+            and not self.env.context.get('default_type')
+        ):
+            vals['detailed_type'] = 'product'
+        return vals
+
+    @api.model
     def create(self, vals):
         param_value = self.env['ir.config_parameter'].sudo().get_param(
             'wsem_pos.disponible_tpv_por_defecto',
-            default=True,
         )
-        product_type = vals.get('detailed_type') or vals.get('type')
+        available_by_default = self.env['res.config.settings']._is_config_enabled(param_value)
+        product_type = vals.get('detailed_type') or vals.get('type') or 'product'
+
+        if 'detailed_type' not in vals and 'type' not in vals:
+            vals['detailed_type'] = 'product'
+
         if (
-            str2bool(param_value)
+            available_by_default
             and product_type == 'product'
             and 'available_in_pos' not in vals
         ):
