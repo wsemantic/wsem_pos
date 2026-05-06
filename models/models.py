@@ -94,10 +94,12 @@ class ProductTemplate(models.Model):
             if variant_count == 1:
                 if not template.product_variant_ids.barcode:
                     template.product_variant_ids.barcode = template.barcode
+                    template.product_variant_ids.default_code = template.barcode
             elif variant_count == 0:
                 archived_variants = template.with_context(active_test=False).product_variant_ids
                 if len(archived_variants) == 1 and not archived_variants.barcode:
                     archived_variants.barcode = template.barcode
+                    archived_variants.default_code = template.barcode
 
 
 class ProductProduct(models.Model):
