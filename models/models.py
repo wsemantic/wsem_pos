@@ -80,6 +80,22 @@ class ProductTemplate(models.Model):
                 super(ProductTemplate, templates_to_enable).write({'available_in_pos': True})
         return result
 
+    def _set_default_code(self):
+        """No pisar el default_code de la variante con el vacío de la plantilla.
+
+        En plantillas de una sola variante, el inverse estándar volcaría el
+        default_code (vacío) de la plantilla sobre la variante, borrando el
+        barcode que se genera en ProductProduct.create.
+        """
+        templates = self.filtered(
+            lambda t: not (
+                len(t.product_variant_ids) == 1
+                and not t.default_code
+                and t.product_variant_ids.default_code
+            )
+        )
+        return super(ProductTemplate, templates)._set_default_code()
+
     def _set_product_variant_field(self, fname):
         """Override to only set barcode on variant if it doesn't already have one.
 
