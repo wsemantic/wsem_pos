@@ -129,6 +129,19 @@ class ProductProduct(models.Model):
         index=True,
     )
 
+    def _compute_display_name(self):
+        # v18 port of the v16 name_get override: show the variant's attribute
+        # values in the displayed name (used on labels) even for single-variant
+        # templates. In v17+ name_get was removed; display_name is a computed
+        # field, so the logic lives in _compute_display_name.
+        super()._compute_display_name()
+        for product in self:
+            # Strip any variant suffix the core may already have appended.
+            base_name = (product.display_name or product.name or "").split(" (")[0]
+            attribute_values = product.product_template_attribute_value_ids.mapped('name')
+            if attribute_values:
+                product.display_name = "%s (%s)" % (base_name, ", ".join(attribute_values))
+
     def _get_barcode_expression_for_record(self, record):
         company = record.company_id or self.env.company
         expression = company.codigo_de_barras_por_atributos
