@@ -41,10 +41,30 @@ class ProductTemplate(models.Model):
 
     model_code = fields.Char(string='Codigo', help="Model Codigo")
 
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        # Reflejar ya en el formulario "Disponible en TPV" para un bien nuevo
+        # cuando la compañía lo tiene activo (el create() también lo asegura,
+        # pero sin esto la casilla se ve desmarcada hasta guardar). Se clava en
+        # type='consu' (default del core) para no depender del orden con el
+        # default de is_storable que pone wsem_attribute_serie.
+        if 'available_in_pos' in fields_list and res.get('type', 'consu') == 'consu' \
+                and self.env.company.disponible_tpv_por_defecto:
+            # Asignación directa (no setdefault): el core ya devuelve
+            # available_in_pos=False en default_get, así que un setdefault no
+            # pisaría nada (mismo caso que is_storable).
+            res['available_in_pos'] = True
+        return res
+
     @api.model_create_multi
     def create(self, vals_list):
         product_defaults = self.default_get(['is_storable'])
         for vals in vals_list:
+            # El default is_storable=True (bien almacenable) lo aplica
+            # wsem_attribute_serie.create (que es el create externo por depender
+            # de este módulo), así que aquí ya llega en vals y lo leemos para el
+            # default de disponibilidad en TPV.
             company = self.env['res.company'].browse(vals.get('company_id')) if vals.get('company_id') else self.env.company
             is_storable = vals.get('is_storable', product_defaults.get('is_storable'))
             if is_storable and company.disponible_tpv_por_defecto:
