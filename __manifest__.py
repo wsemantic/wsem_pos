@@ -23,6 +23,7 @@
     'assets': {
         'point_of_sale._assets_pos': [
             'wsem_pos/static/src/app/barcode/barcode_reader_patch.js',
+            'wsem_pos/static/src/app/screens/product_grid_memo.js',
         ],
     },
     "license": "AGPL-3",
