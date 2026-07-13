@@ -21,7 +21,7 @@
         'views/views.xml',
     ],
     'assets': {
-        'point_of_sale.assets': [
+        'point_of_sale._assets_pos': [
             'wsem_pos/static/src/app/barcode/barcode_reader_patch.js',
         ],
     },

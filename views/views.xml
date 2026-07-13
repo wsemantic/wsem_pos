@@ -8,6 +8,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='categ_id']" position="after">
                     <field name="model_code" string="Codigo" />
+                    <field name="excluir_de_web" />
                 </xpath>
             </field>
         </record>
@@ -42,6 +43,14 @@
                         <div class="content-group">
                             <div class="mt16">
                                 <field name="disponible_tpv_por_defecto" />
+                            </div>
+                        </div>
+                    </setting>
+                    <setting string="Talla y color requeridos en compras"
+                        help="Exige valores de 'Talla' y 'Color' en los productos almacenables creados desde pedidos de compra.">
+                        <div class="content-group">
+                            <div class="mt16">
+                                <field name="talla_color_requerido_en_compras" />
                             </div>
                         </div>
                     </setting>
